@@ -31,11 +31,49 @@
 			font-family	: arial;
 			font-size	: 100%;
 		}
+		
+		.control{
+			position:fixed;
+			z-index:5;
+			right:15px;
+			top:15px;
+			width:75px;
+		}
+		
+		.control .bulb:hover{
+			box-shadow: 0px 0px 16px 5px whitesmoke;
+			background-color: rgba(255,255,255,1);
+			cursor:pointer;
+
+		}
+		
+		.control .bulb{
+			border-radius: 100px;
+			background-color: rgba(255,255,255,0.8);
+			width: 50px;
+			height: 50px;
+			border: none;
+			box-shadow: 0px 0px 7px 5px whitesmoke;
+			margin: 8px auto;
+		}
+		
+		
 		</style>
 	</head>
 <body>
 	<!-- three.js container -->
     	<div id="container"></div>
+		
+		<div class="control">
+			<button class="bulb" id="bulb" onclick="lightBulb()" >
+				<img style="width:35px;" src="https://img.icons8.com/ios/50/000000/desk-lamp.png">
+			</button>
+			
+			<button class="bulb" id="bulb" onclick="toggleRotation()" >
+				<img style="width:35px;" src="https://img.icons8.com/ios/50/000000/rotate-right-filled.png">
+			</button>
+			
+		</div>
 	<!-- info on screen display -->
 
 		<!-- shader for bird's position -->
@@ -431,10 +469,10 @@
 
 	<script type="text/javascript">
 		var stats, scene, renderer, composer;
-		var camera, cameraControls;
+		var camera, cameraControls,bulb;
 
 		//aimation variables ... 
-		var p,n,cry=0;
+		var p,n,cry=0,toggleRotationFlag=1;
 
 		var Variables = function(){
 			this.speed = 0.03
@@ -495,8 +533,8 @@
 			cameraControls.autoRotation = true;
 			cameraControls.dampingFactor = 0.25;
 			cameraControls.screenSpacePanning = false;
-			cameraControls.minDistance = 100;
-			cameraControls.maxDistance = 1000;
+			cameraControls.minDistance = 120;
+			cameraControls.maxDistance = 1600;
 			cameraControls.maxPolarAngle = Math.PI / 2;
 			
 			
@@ -558,7 +596,7 @@
 					materials.preload();
 					
 					var c = 0;
-					for(c = 0;c<15;c++){
+					for(c = 0;c<25;c++){
 						
 						new THREE.OBJLoader()
 							.setMaterials( materials )
@@ -584,6 +622,13 @@
 			light.position.set( 0, 1000, 0 );
 			scene.add( light );
 
+			//interior light
+			bulb = new THREE.PointLight( 0xffffff, 1, 0, 2 ); //moon 0x070707
+			bulb.position.set(0,600,0);
+			bulb.intensity = 0;
+			scene.add( bulb );
+			
+			
 			//house ....
 			var loader = new THREE.OBJLoader();			
 			loader.load(
@@ -639,19 +684,55 @@
 					height: 15,
 					curveSegments: 20,
 				});
+
+				mn15 = new THREE.TextGeometry( "#MachineNo5!", {
+					font: font,
+					size: 75,
+					height: 15,
+					curveSegments: 20,
+				});
+				
 				
 				textGeo.computeBoundingBox();
 				textGeo.computeVertexNormals();
 				
+				mn15.computeBoundingBox();
+				mn15.computeVertexNormals();
+				
 				var cubeMat = new THREE.MeshBasicMaterial({color: 0x070707})
 				var text = new THREE.Mesh(textGeo, cubeMat)
+
+				var cubeMat1 = new THREE.MeshBasicMaterial({color: 0xffffff})
+				var mn15Geo = new THREE.Mesh(mn15, cubeMat1)
+
 				text.rotation.set(0, (Math.PI/2), 0);
 				text.position.set(150,0,180);
+
+				mn15Geo.rotation.set(0, -(Math.PI/2), 0);
+				mn15Geo.position.set(-900,0,-210);
+
+			
 				scene.add(text)
+				scene.add(mn15Geo)
 			});
 			
 		}
 
+		function lightBulb(){
+			bulb.intensity = !bulb.intensity;
+			
+			window.setTimeout(
+				function(){ 
+					window.bulb.intensity = !window.bulb.intensity;
+				},
+			3000);
+		}
+	
+		function toggleRotation(lx,ly){
+			toggleRotationFlag = !toggleRotationFlag;
+		}
+		
+		
 		function loadTree(object){
 		
 			
@@ -840,11 +921,16 @@
 			spotLight.position.x = -lx;
 			spotLight.position.z = lz;
 			
+			if(toggleRotationFlag){
+				camera.position.x = lx*100;
+				camera.position.z = lz*100;
+				camera.lookAt(scene.position)			
+			}
 			
-			camera.position.x = lx*100;
-			camera.position.z = lz*100;
+//			camera.position.x = lx*100;
+//			camera.position.z = lz*100;
 
-			camera.lookAt(scene.position)
+//			camera.lookAt(scene.position)
 						
 			var randomColor =  new THREE.Color(colors[Math.round((Math.random() * 10)/2)]);
 
